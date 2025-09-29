@@ -75,7 +75,11 @@ namespace DataFormatConverter.Infrastructure.Handlers
                 return obj?.ToString() ?? string.Empty;
             }
         }
-
+        /// <summary>
+        /// Converts a single dictionary to a canonical line string.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
         private static string ConvertToCanonicalLine(IDictionary<string, object> dict)
         {
             return string.Join("|", dict.Select(kv => $"{kv.Key}={kv.Value}"));
