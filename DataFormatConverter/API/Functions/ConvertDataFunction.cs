@@ -1,5 +1,6 @@
-using DataFormatConverter.Application.Services;
+﻿using DataFormatConverter.Application.Services;
 using DataFormatConverter.Domain.Entities;
+using DataFormatConverter.Helper;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -25,27 +26,31 @@ public class ConvertDataFunction
     [Function("ConvertData")]
     public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        _logger.LogInformation("Received request: {RequestBody}", requestBody);
-
-        ConversionRequest request;
-
-        request = JsonSerializer.Deserialize<ConversionRequest>(requestBody);
-
-        // Validate required fields
-        if (request == null ||
-            string.IsNullOrWhiteSpace(request.inputFormat) ||
-            string.IsNullOrWhiteSpace(request.outputFormat) ||
-            string.IsNullOrWhiteSpace(request.data))
-        {
-            var badResp = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badResp.WriteStringAsync("InputFormat, OutputFormat, and Data cannot be null or empty.");
-            return badResp;
-        }
-
         try
         {
-            string result = _service.Convert(request.data, request.inputFormat, request.outputFormat);
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            _logger.LogInformation("Received request: {RequestBody}", requestBody);
+
+            var request = JsonSerializer.Deserialize<ConversionRequest>(requestBody);
+
+            // Validate required fields
+            if (request == null ||
+                string.IsNullOrWhiteSpace(request.inputFormat) ||
+                string.IsNullOrWhiteSpace(request.outputFormat) ||
+                string.IsNullOrWhiteSpace(request.data.ToString()))
+            {
+                var badResp = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badResp.WriteStringAsync("InputFormat, OutputFormat, and Data cannot be null or empty.");
+                return badResp;
+            }
+
+            // ✅ Normalize data (handles both raw JSON object & string)
+            string normalizedData = DataNormalizer.ExtractDataAsString(request.data);
+
+            // ✅ Call your service
+            string result = _service.Convert(normalizedData, request.inputFormat, request.outputFormat);
+
+            //string result = _service.Convert(request.data, request.inputFormat, request.outputFormat);
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteStringAsync(result);
             return response;

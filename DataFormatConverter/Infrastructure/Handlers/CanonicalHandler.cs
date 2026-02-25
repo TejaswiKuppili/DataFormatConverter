@@ -1,4 +1,4 @@
-﻿using DataFormatConverter.Domain.Interfaces;
+using DataFormatConverter.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,14 +67,16 @@ namespace DataFormatConverter.Infrastructure.Handlers
             }
             else if (obj is IDictionary<string, object> singleDict)
             {
+                var dict = ConvertToCanonicalLine(singleDict);
+                Console.WriteLine(dict);
                 return ConvertToCanonicalLine(singleDict);
             }
             else
             {
-                // Handle primitive or unknown types
                 return obj?.ToString() ?? string.Empty;
             }
         }
+
         /// <summary>
         /// Converts a single dictionary to a canonical line string.
         /// </summary>

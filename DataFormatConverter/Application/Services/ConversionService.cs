@@ -1,9 +1,5 @@
-﻿using DataFormatConverter.Application.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DataFormatConverter.Application.Repositories;
+using DataFormatConverter.Helper;
 
 namespace DataFormatConverter.Application.Services
 {
@@ -28,12 +24,15 @@ namespace DataFormatConverter.Application.Services
         /// <returns>Converted data as string</returns>
         public string Convert(string inputData, string inputFormat, string outputFormat)
         {
+            // Normalize the input data
+            var rawData = DataNormalizer.ExtractDataAsString(inputData);
+
             // Get the appropriate handlers
             var inputHandler = _repository.GetHandler(inputFormat);
             var outputHandler = _repository.GetHandler(outputFormat);
 
             // Deserialize input into intermediate object (usually dictionary)
-            var obj = inputHandler.Deserialize(inputData);
+            var obj = inputHandler.Deserialize(rawData);
 
             // Serialize object into the desired output format and return
             return outputHandler.Serialize(obj);

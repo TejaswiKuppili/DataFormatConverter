@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -18,27 +19,101 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
         public object Deserialize(string data)
         {
+            if (string.IsNullOrWhiteSpace(data))
+                return new Dictionary<string, object>();
+
+            data = data.Trim();
+
+            // Safely unescape JSON string if it has surrounding quotes
+            if (data.StartsWith("\"") && data.EndsWith("\""))
+            {
+                data = JsonSerializer.Deserialize<string>(data);
+            }
+
             var doc = XDocument.Parse(data);
             var root = doc.Root;
 
             if (root == null)
                 return new Dictionary<string, object>();
 
-            // If root has multiple child elements with the same name, treat as list
-            if (root.Elements().GroupBy(e => e.Name.LocalName).Any(g => g.Count() > 1))
+            // Recursive conversion
+            return new Dictionary<string, object>
             {
-                var list = new List<Dictionary<string, object>>();
-                foreach (var item in root.Elements())
-                {
-                    var dict = item.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
-                    list.Add(dict);
-                }
-                return list;
-            }
-
-            // Otherwise, single object
-            return root.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
+                [root.Name.LocalName] = ParseElement(root)
+            };
         }
+
+        private object ParseElement(XElement element)
+        {
+            // If element has no children → return text value
+            if (!element.HasElements)
+                return element.Value;
+
+            // If element has multiple children with the same name → treat as array
+            var grouped = element.Elements().GroupBy(e => e.Name.LocalName);
+            bool isArray = grouped.Any(g => g.Count() > 1);
+
+            if (isArray)
+            {
+                var dict = new Dictionary<string, object>();
+                foreach (var g in grouped)
+                {
+                    if (g.Count() > 1)
+                    {
+                        dict[g.Key] = g.Select(ParseElement).ToList();
+                    }
+                    else
+                    {
+                        dict[g.Key] = ParseElement(g.First());
+                    }
+                }
+                return dict;
+            }
+            else
+            {
+                // Otherwise, treat as single nested object
+                var dict = new Dictionary<string, object>();
+                foreach (var child in element.Elements())
+                    dict[child.Name.LocalName] = ParseElement(child);
+                return dict;
+            }
+        }
+
+        //public object Deserialize(string data)
+        //{
+        //    if (string.IsNullOrWhiteSpace(data))
+        //        return new Dictionary<string, object>();
+
+        //    // Remove surrounding quotes if data came from JSON string
+        //    data = data.Trim();
+        //    if (data.StartsWith("\"") && data.EndsWith("\""))
+        //    {
+        //        data = data.Substring(1, data.Length - 2)
+        //                   .Replace("\\n", "")
+        //                   .Replace("\\t", "");
+        //    }
+
+        //    var doc = XDocument.Parse(data);
+        //    var root = doc.Root;
+
+        //    if (root == null)
+        //        return new Dictionary<string, object>();
+
+        //    // If root has multiple child elements with the same name, treat as list
+        //    if (root.Elements().GroupBy(e => e.Name.LocalName).Any(g => g.Count() > 1))
+        //    {
+        //        var list = new List<Dictionary<string, object>>();
+        //        foreach (var item in root.Elements())
+        //        {
+        //            var dict = item.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
+        //            list.Add(dict);
+        //        }
+        //        return list;
+        //    }
+
+        //    // Otherwise, single object
+        //    return root.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
+        //}
 
         public string Serialize(object obj)
         {
