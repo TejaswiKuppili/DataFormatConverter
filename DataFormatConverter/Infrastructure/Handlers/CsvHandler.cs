@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using DataFormatConverter.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -61,7 +61,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
             }
             else
             {
-                // Single primitive
                 csv.WriteField(obj?.ToString());
                 csv.NextRecord();
                 return writer.ToString();
@@ -69,12 +68,10 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
             if (listToWrite != null && listToWrite.Any())
             {
-                // Write headers
                 foreach (var kv in listToWrite.First())
                     csv.WriteField(kv.Key);
                 csv.NextRecord();
 
-                // Write rows
                 foreach (var record in listToWrite)
                 {
                     foreach (var kv in record)

@@ -24,17 +24,12 @@ namespace DataFormatConverter.Application.Services
         /// <returns>Converted data as string</returns>
         public string Convert(string inputData, string inputFormat, string outputFormat)
         {
-            // Normalize the input data
             var rawData = DataNormalizer.ExtractDataAsString(inputData);
-
-            // Get the appropriate handlers
             var inputHandler = _repository.GetHandler(inputFormat);
             var outputHandler = _repository.GetHandler(outputFormat);
 
-            // Deserialize input into intermediate object (usually dictionary)
             var obj = inputHandler.Deserialize(rawData);
 
-            // Serialize object into the desired output format and return
             return outputHandler.Serialize(obj);
         }
     }

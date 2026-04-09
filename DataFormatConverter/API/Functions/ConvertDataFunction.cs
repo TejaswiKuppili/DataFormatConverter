@@ -1,4 +1,4 @@
-﻿using DataFormatConverter.Application.Services;
+using DataFormatConverter.Application.Services;
 using DataFormatConverter.Domain.Entities;
 using DataFormatConverter.Helper;
 using Microsoft.Azure.Functions.Worker;
@@ -33,7 +33,6 @@ public class ConvertDataFunction
 
             var request = JsonSerializer.Deserialize<ConversionRequest>(requestBody);
 
-            // Validate required fields
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.inputFormat) ||
                 string.IsNullOrWhiteSpace(request.outputFormat) ||
@@ -44,13 +43,10 @@ public class ConvertDataFunction
                 return badResp;
             }
 
-            // ✅ Normalize data (handles both raw JSON object & string)
             string normalizedData = DataNormalizer.ExtractDataAsString(request.data);
 
-            // ✅ Call your service
             string result = _service.Convert(normalizedData, request.inputFormat, request.outputFormat);
 
-            //string result = _service.Convert(request.data, request.inputFormat, request.outputFormat);
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteStringAsync(result);
             return response;

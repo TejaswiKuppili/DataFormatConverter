@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,20 +12,8 @@ namespace DataFormatConverter.Domain.Interfaces
     /// </summary>
     public interface IFormatHandler
     {
-        /// <summary>
-        /// Key that identifies the format (e.g., "json", "xml", "csv").
-        /// </summary>
         string FormatKey { get; }
-
-        /// <summary>
-        /// Deserialize input data from the specific format into an object.
-        /// </summary>
         object Deserialize(string data);
-
-        /// <summary>
-        /// Serialize an object into the specific format.
-        /// </summary>
         string Serialize(object obj);
     }
-
 }

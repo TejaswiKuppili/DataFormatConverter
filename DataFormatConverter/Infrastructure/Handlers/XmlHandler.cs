@@ -1,4 +1,4 @@
-﻿using DataFormatConverter.Domain.Interfaces;
+using DataFormatConverter.Domain.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +24,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
             data = data.Trim();
 
-            // Safely unescape JSON string if it has surrounding quotes
             if (data.StartsWith("\"") && data.EndsWith("\""))
             {
                 data = JsonSerializer.Deserialize<string>(data);
@@ -36,7 +35,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
             if (root == null)
                 return new Dictionary<string, object>();
 
-            // Recursive conversion
             return new Dictionary<string, object>
             {
                 [root.Name.LocalName] = ParseElement(root)
@@ -45,11 +43,9 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
         private object ParseElement(XElement element)
         {
-            // If element has no children → return text value
             if (!element.HasElements)
                 return element.Value;
 
-            // If element has multiple children with the same name → treat as array
             var grouped = element.Elements().GroupBy(e => e.Name.LocalName);
             bool isArray = grouped.Any(g => g.Count() > 1);
 
@@ -71,49 +67,12 @@ namespace DataFormatConverter.Infrastructure.Handlers
             }
             else
             {
-                // Otherwise, treat as single nested object
                 var dict = new Dictionary<string, object>();
                 foreach (var child in element.Elements())
                     dict[child.Name.LocalName] = ParseElement(child);
                 return dict;
             }
         }
-
-        //public object Deserialize(string data)
-        //{
-        //    if (string.IsNullOrWhiteSpace(data))
-        //        return new Dictionary<string, object>();
-
-        //    // Remove surrounding quotes if data came from JSON string
-        //    data = data.Trim();
-        //    if (data.StartsWith("\"") && data.EndsWith("\""))
-        //    {
-        //        data = data.Substring(1, data.Length - 2)
-        //                   .Replace("\\n", "")
-        //                   .Replace("\\t", "");
-        //    }
-
-        //    var doc = XDocument.Parse(data);
-        //    var root = doc.Root;
-
-        //    if (root == null)
-        //        return new Dictionary<string, object>();
-
-        //    // If root has multiple child elements with the same name, treat as list
-        //    if (root.Elements().GroupBy(e => e.Name.LocalName).Any(g => g.Count() > 1))
-        //    {
-        //        var list = new List<Dictionary<string, object>>();
-        //        foreach (var item in root.Elements())
-        //        {
-        //            var dict = item.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
-        //            list.Add(dict);
-        //        }
-        //        return list;
-        //    }
-
-        //    // Otherwise, single object
-        //    return root.Elements().ToDictionary(x => x.Name.LocalName, x => (object)x.Value);
-        //}
 
         public string Serialize(object obj)
         {
@@ -122,7 +81,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
             return new XDocument(root).ToString();
         }
 
-        // Recursive helper method
         private void AddElements(XElement parent, object obj)
         {
             if (obj is IDictionary<string, object> dict)

@@ -26,7 +26,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
             var records = new List<Dictionary<string, object>>();
 
-            // Handle multi-line canonical data (optional)
             var lines = data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var line in lines)
@@ -36,7 +35,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
 
                 foreach (var pair in pairs)
                 {
-                    // If format is key=value
                     if (pair.Contains('='))
                     {
                         var kv = pair.Split('=', 2);
@@ -44,7 +42,6 @@ namespace DataFormatConverter.Infrastructure.Handlers
                     }
                     else
                     {
-                        // If only values (no keys)
                         record[$"Field{record.Count + 1}"] = pair.Trim();
                     }
                 }

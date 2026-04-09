@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,15 +20,12 @@ namespace DataFormatConverter.Helper
                 case null:
                     return string.Empty;
 
-                // Case 1: Direct string (e.g. XML, CSV, or already serialized JSON)
                 case string str:
                     return str;
 
-                // Case 2: JSON object or array automatically bound by ASP.NET Core
                 case JsonElement json:
                     return json.GetRawText();
 
-                // Case 3: Already deserialized object (edge case)
                 default:
                     return JsonSerializer.Serialize(data);
             }
